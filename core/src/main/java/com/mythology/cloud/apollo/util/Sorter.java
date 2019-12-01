@@ -98,7 +98,6 @@ public abstract class Sorter {
     }
 
     /**
-     *
      * @param from
      * @param mid
      * @param to
@@ -136,7 +135,6 @@ public abstract class Sorter {
     }
 
     /**
-     *
      * @param from
      * @param to
      * @param val
@@ -158,7 +156,6 @@ public abstract class Sorter {
     }
 
     /**
-     *
      * @param from
      * @param to
      * @param val
@@ -249,6 +246,11 @@ public abstract class Sorter {
         binarySort(from, to, from + 1);
     }
 
+    /**
+     * @param from
+     * @param to
+     * @param i
+     */
     void binarySort(int from, int to, int i) {
         for (; i < to; ++i) {
             setPivot(i);
@@ -273,6 +275,11 @@ public abstract class Sorter {
      * Use heap sort to sort items between {@code from} inclusive and {@code to}
      * exclusive. This runs in {@code O(n*log(n))} and is used as a fall-back by
      * {@link IntroSorter}.
+     *
+     * <p>
+     * 使用堆排序在{@code from}包含和{@code to}不包含之间对项目进行排序。
+     * 它以{@code O（n * log（n））}运行，并被{@link IntroSorter}用作后备。
+     * </p>
      */
     void heapSort(int from, int to) {
         if (to - from <= 1) {
