@@ -10,7 +10,7 @@ package com.mythology.cloud.apollo.util;
  *
  * <p>
  * 基于快速排序算法的一个变体introsort的实现：
- *
+ * <p>
  * 当递归级别超过要排序的数组长度的对数时，它会退回到堆排序。
  * 这样可以防止quicksort进入最坏情况的二次运行时。 小数组通过插入排序进行排序。
  * </p>
@@ -32,10 +32,13 @@ public abstract class IntroSorter extends Sorter {
     }
 
     void quicksort(int from, int to, int maxDepth) {
+        //当需要比较的元素少于20，则使用二分插入排序
         if (to - from < BINARY_SORT_THRESHOLD) {
             binarySort(from, to);
             return;
-        } else if (--maxDepth < 0) {
+        }
+        //当
+        else if (--maxDepth < 0) {
             heapSort(from, to);
             return;
         }

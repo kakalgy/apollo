@@ -21,24 +21,32 @@ import java.util.Map;
  * virtual machine. If you use a non-OpenJDK/Oracle-based JVM,
  * the measurements may be slightly wrong.
  *
+ * @lucene.internal
  * @see #shallowSizeOf(Object)
  * @see #shallowSizeOfInstance(Class)
- *
- * @lucene.internal
  */
 public final class RamUsageEstimator {
 
-    /** One kilobyte bytes. */
+    /**
+     * One kilobyte bytes.
+     */
     public static final long ONE_KB = 1024;
 
-    /** One megabyte bytes. */
+    /**
+     * One megabyte bytes.
+     */
     public static final long ONE_MB = ONE_KB * ONE_KB;
 
-    /** One gigabyte bytes.*/
+    /**
+     * One gigabyte bytes.
+     */
     public static final long ONE_GB = ONE_KB * ONE_MB;
 
-    /** No instantiation. */
-    private RamUsageEstimator() {}
+    /**
+     * No instantiation.
+     */
+    private RamUsageEstimator() {
+    }
 
     /**
      * True, iff compressed references (oops) are enabled by this JVM
@@ -81,7 +89,7 @@ public final class RamUsageEstimator {
     /**
      * Sizes of primitive classes.
      */
-    public static final Map<Class<?>,Integer> primitiveSizes;
+    public static final Map<Class<?>, Integer> primitiveSizes;
 
     static {
         Map<Class<?>, Integer> primitiveSizesMap = new IdentityHashMap<>();
@@ -103,7 +111,9 @@ public final class RamUsageEstimator {
     static final long LONG_CACHE_MIN_VALUE, LONG_CACHE_MAX_VALUE;
     static final int LONG_SIZE, STRING_SIZE;
 
-    /** For testing only */
+    /**
+     * For testing only
+     */
     static final boolean JVM_IS_HOTSPOT_64BIT;
 
     static final String MANAGEMENT_FACTORY_CLASS = "java.lang.management.ManagementFactory";
@@ -185,12 +195,16 @@ public final class RamUsageEstimator {
         STRING_SIZE = (int) shallowSizeOfInstance(String.class);
     }
 
-    /** Approximate memory usage that we assign to a Hashtable / HashMap entry. */
+    /**
+     * Approximate memory usage that we assign to a Hashtable / HashMap entry.
+     */
     public static final long HASHTABLE_RAM_BYTES_PER_ENTRY =
             2 * NUM_BYTES_OBJECT_REF // key + value
                     * 2; // hash tables need to be oversized to avoid collisions, assume 2x capacity
 
-    /** Approximate memory usage that we assign to a LinkedHashMap entry. */
+    /**
+     * Approximate memory usage that we assign to a LinkedHashMap entry.
+     */
     public static final long LINKED_HASHTABLE_RAM_BYTES_PER_ENTRY =
             HASHTABLE_RAM_BYTES_PER_ENTRY
                     + 2 * NUM_BYTES_OBJECT_REF; // previous & next references
@@ -203,325 +217,326 @@ public final class RamUsageEstimator {
         return size - (size % NUM_BYTES_OBJECT_ALIGNMENT);
     }
 
-    /**
-     * Return the size of the provided {@link Long} object, returning 0 if it is
-     * cached by the JVM and its shallow size otherwise.
-     */
-    public static long sizeOf(Long value) {
-        if (value >= LONG_CACHE_MIN_VALUE && value <= LONG_CACHE_MAX_VALUE) {
-            return 0;
-        }
-        return LONG_SIZE;
-    }
-
-    /** Returns the size in bytes of the byte[] object. */
-    public static long sizeOf(byte[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
-    }
-
-    /** Returns the size in bytes of the boolean[] object. */
-    public static long sizeOf(boolean[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
-    }
-
-    /** Returns the size in bytes of the char[] object. */
-    public static long sizeOf(char[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Character.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the short[] object. */
-    public static long sizeOf(short[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Short.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the int[] object. */
-    public static long sizeOf(int[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Integer.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the float[] object. */
-    public static long sizeOf(float[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Float.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the long[] object. */
-    public static long sizeOf(long[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Long.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the double[] object. */
-    public static long sizeOf(double[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Double.BYTES * arr.length);
-    }
-
-    /** Returns the size in bytes of the String[] object. */
-    public static long sizeOf(String[] arr) {
-        long size = shallowSizeOf(arr);
-        for (String s : arr) {
-            if (s == null) {
-                continue;
-            }
-            size += sizeOf(s);
-        }
-        return size;
-    }
-
-    /** Recurse only into immediate descendants. */
-    public static final int MAX_DEPTH = 1;
-
-    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
-     * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
-     * This method recurses up to {@link #MAX_DEPTH}.
-     */
-    public static long sizeOfMap(Map<?, ?> map) {
-        return sizeOfMap(map, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
-    }
-
-    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
-     * default object size when object type is not well known.
-     * This method recurses up to {@link #MAX_DEPTH}.
-     */
-    public static long sizeOfMap(Map<?, ?> map, long defSize) {
-        return sizeOfMap(map, 0, defSize);
-    }
-
-    private static long sizeOfMap(Map<?, ?> map, int depth, long defSize) {
-        if (map == null) {
-            return 0;
-        }
-        long size = shallowSizeOf(map);
-        if (depth > MAX_DEPTH) {
-            return size;
-        }
-        long sizeOfEntry = -1;
-        for (Map.Entry<?, ?> entry : map.entrySet()) {
-            if (sizeOfEntry == -1) {
-                sizeOfEntry = shallowSizeOf(entry);
-            }
-            size += sizeOfEntry;
-            size += sizeOfObject(entry.getKey(), depth, defSize);
-            size += sizeOfObject(entry.getValue(), depth, defSize);
-        }
-        return alignObjectSize(size);
-    }
-
-    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
-     * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
-     * This method recurses up to {@link #MAX_DEPTH}.
-     */
-    public static long sizeOfCollection(Collection<?> collection) {
-        return sizeOfCollection(collection, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
-    }
-
-    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
-     * default object size when object type is not well known.
-     * This method recurses up to {@link #MAX_DEPTH}.
-     */
-    public static long sizeOfCollection(Collection<?> collection, long defSize) {
-        return sizeOfCollection(collection, 0, defSize);
-    }
-
-    private static long sizeOfCollection(Collection<?> collection, int depth, long defSize) {
-        if (collection == null) {
-            return 0;
-        }
-        long size = shallowSizeOf(collection);
-        if (depth > MAX_DEPTH) {
-            return size;
-        }
-        // assume array-backed collection and add per-object references
-        size += NUM_BYTES_ARRAY_HEADER + collection.size() * NUM_BYTES_OBJECT_REF;
-        for (Object o : collection) {
-            size += sizeOfObject(o, depth, defSize);
-        }
-        return alignObjectSize(size);
-    }
-
-    private static final class RamUsageQueryVisitor extends QueryVisitor {
-        long total;
-        long defSize;
-        Query root;
-
-        RamUsageQueryVisitor(Query root, long defSize) {
-            this.root = root;
-            this.defSize = defSize;
-            if (defSize > 0) {
-                total = defSize;
-            } else {
-                total = shallowSizeOf(root);
-            }
-        }
-
-        @Override
-        public void consumeTerms(Query query, Term... terms) {
-            if (query != root) {
-                if (defSize > 0) {
-                    total += defSize;
-                } else {
-                    total += shallowSizeOf(query);
-                }
-            }
-            if (terms != null) {
-                total += sizeOf(terms);
-            }
-        }
-
-        @Override
-        public void visitLeaf(Query query) {
-            if (query == root) {
-                return;
-            }
-            if (query instanceof Accountable) {
-                total += ((Accountable)query).ramBytesUsed();
-            } else {
-                if (defSize > 0) {
-                    total += defSize;
-                } else {
-                    total += shallowSizeOf(query);
-                }
-            }
-        }
-
-        @Override
-        public QueryVisitor getSubVisitor(BooleanClause.Occur occur, Query parent) {
-            return this;
-        }
-    }
-
-    /**
-     * Returns the size in bytes of a Query object. Unknown query types will be estimated
-     * as {@link #QUERY_DEFAULT_RAM_BYTES_USED}.
-     */
-    public static long sizeOf(Query q) {
-        return sizeOf(q, QUERY_DEFAULT_RAM_BYTES_USED);
-    }
-
-    /**
-     * Returns the size in bytes of a Query object. Unknown query types will be estimated
-     * using {@link #shallowSizeOf(Object)}, or using the supplied <code>defSize</code> parameter
-     * if its value is greater than 0.
-     */
-    public static long sizeOf(Query q, long defSize) {
-        if (q instanceof Accountable) {
-            return ((Accountable)q).ramBytesUsed();
-        } else {
-            RamUsageQueryVisitor visitor = new RamUsageQueryVisitor(q, defSize);
-            q.visit(visitor);
-            return alignObjectSize(visitor.total);
-        }
-    }
-
-    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
-     * will be estimated according to their formulas, and all other object sizes will be estimated
-     * as {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED}.
-     */
-    public static long sizeOfObject(Object o) {
-        return sizeOfObject(o, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
-    }
-
-    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
-     * will be estimated according to their formulas, and all other object sizes will be estimated
-     * using {@link #shallowSizeOf(Object)}, or using the supplied <code>defSize</code> parameter if
-     * its value is greater than 0.
-     */
-    public static long sizeOfObject(Object o, long defSize) {
-        return sizeOfObject(o, 0, defSize);
-    }
-
-    private static long sizeOfObject(Object o, int depth, long defSize) {
-        if (o == null) {
-            return 0;
-        }
-        long size;
-        if (o instanceof Accountable) {
-            size = ((Accountable)o).ramBytesUsed();
-        } else if (o instanceof String) {
-            size = sizeOf((String)o);
-        } else if (o instanceof boolean[]) {
-            size = sizeOf((boolean[])o);
-        } else if (o instanceof byte[]) {
-            size = sizeOf((byte[])o);
-        } else if (o instanceof char[]) {
-            size = sizeOf((char[])o);
-        } else if (o instanceof double[]) {
-            size = sizeOf((double[])o);
-        } else if (o instanceof float[]) {
-            size = sizeOf((float[])o);
-        } else if (o instanceof int[]) {
-            size = sizeOf((int[])o);
-        } else if (o instanceof Long) {
-            size = sizeOf((Long)o);
-        } else if (o instanceof long[]) {
-            size = sizeOf((long[])o);
-        } else if (o instanceof short[]) {
-            size = sizeOf((short[])o);
-        } else if (o instanceof String[]) {
-            size = sizeOf((String[]) o);
-        } else if (o instanceof Query) {
-            size = sizeOf((Query)o, defSize);
-        } else if (o instanceof Map) {
-            size = sizeOfMap((Map) o, ++depth, defSize);
-        } else if (o instanceof Collection) {
-            size = sizeOfCollection((Collection)o, ++depth, defSize);
-        } else {
-            if (defSize > 0) {
-                size = defSize;
-            } else {
-                size = shallowSizeOf(o);
-            }
-        }
-        return size;
-    }
-
-    /** Returns the size in bytes of the {@link Accountable} object, using its
-     * {@link Accountable#ramBytesUsed()} method.
-     */
-    public static long sizeOf(Accountable accountable) {
-        return accountable.ramBytesUsed();
-    }
-
-    /** Returns the size in bytes of the String object. */
-    public static long sizeOf(String s) {
-        if (s == null) {
-            return 0;
-        }
-        // may not be true in Java 9+ and CompactStrings - but we have no way to determine this
-
-        // char[] + hashCode
-        long size = STRING_SIZE + (long)NUM_BYTES_ARRAY_HEADER + (long)Character.BYTES * s.length();
-        return alignObjectSize(size);
-    }
-
-    /** Returns the shallow size in bytes of the Object[] object. */
-    // Use this method instead of #shallowSizeOf(Object) to avoid costly reflection
-    public static long shallowSizeOf(Object[] arr) {
-        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_OBJECT_REF * arr.length);
-    }
-
-    /**
-     * Estimates a "shallow" memory usage of the given object. For arrays, this will be the
-     * memory taken by array storage (no subreferences will be followed). For objects, this
-     * will be the memory taken by the fields.
-     *
-     * JVM object alignments are also applied.
-     */
-    public static long shallowSizeOf(Object obj) {
-        if (obj == null) return 0;
-        final Class<?> clz = obj.getClass();
-        if (clz.isArray()) {
-            return shallowSizeOfArray(obj);
-        } else {
-            return shallowSizeOfInstance(clz);
-        }
-    }
+//    /**
+//     * Return the size of the provided {@link Long} object, returning 0 if it is
+//     * cached by the JVM and its shallow size otherwise.
+//     */
+//    public static long sizeOf(Long value) {
+//        if (value >= LONG_CACHE_MIN_VALUE && value <= LONG_CACHE_MAX_VALUE) {
+//            return 0;
+//        }
+//        return LONG_SIZE;
+//    }
+//
+//    /** Returns the size in bytes of the byte[] object. */
+//    public static long sizeOf(byte[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the boolean[] object. */
+//    public static long sizeOf(boolean[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the char[] object. */
+//    public static long sizeOf(char[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Character.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the short[] object. */
+//    public static long sizeOf(short[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Short.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the int[] object. */
+//    public static long sizeOf(int[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Integer.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the float[] object. */
+//    public static long sizeOf(float[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Float.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the long[] object. */
+//    public static long sizeOf(long[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Long.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the double[] object. */
+//    public static long sizeOf(double[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Double.BYTES * arr.length);
+//    }
+//
+//    /** Returns the size in bytes of the String[] object. */
+//    public static long sizeOf(String[] arr) {
+//        long size = shallowSizeOf(arr);
+//        for (String s : arr) {
+//            if (s == null) {
+//                continue;
+//            }
+//            size += sizeOf(s);
+//        }
+//        return size;
+//    }
+//
+//    /** Recurse only into immediate descendants. */
+//    public static final int MAX_DEPTH = 1;
+//
+//    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
+//     * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
+//     * This method recurses up to {@link #MAX_DEPTH}.
+//     */
+//    public static long sizeOfMap(Map<?, ?> map) {
+//        return sizeOfMap(map, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
+//    }
+//
+//    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
+//     * default object size when object type is not well known.
+//     * This method recurses up to {@link #MAX_DEPTH}.
+//     */
+//    public static long sizeOfMap(Map<?, ?> map, long defSize) {
+//        return sizeOfMap(map, 0, defSize);
+//    }
+//
+//    private static long sizeOfMap(Map<?, ?> map, int depth, long defSize) {
+//        if (map == null) {
+//            return 0;
+//        }
+//        long size = shallowSizeOf(map);
+//        if (depth > MAX_DEPTH) {
+//            return size;
+//        }
+//        long sizeOfEntry = -1;
+//        for (Map.Entry<?, ?> entry : map.entrySet()) {
+//            if (sizeOfEntry == -1) {
+//                sizeOfEntry = shallowSizeOf(entry);
+//            }
+//            size += sizeOfEntry;
+//            size += sizeOfObject(entry.getKey(), depth, defSize);
+//            size += sizeOfObject(entry.getValue(), depth, defSize);
+//        }
+//        return alignObjectSize(size);
+//    }
+//
+//    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
+//     * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
+//     * This method recurses up to {@link #MAX_DEPTH}.
+//     */
+//    public static long sizeOfCollection(Collection<?> collection) {
+//        return sizeOfCollection(collection, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
+//    }
+//
+//    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
+//     * default object size when object type is not well known.
+//     * This method recurses up to {@link #MAX_DEPTH}.
+//     */
+//    public static long sizeOfCollection(Collection<?> collection, long defSize) {
+//        return sizeOfCollection(collection, 0, defSize);
+//    }
+//
+//    private static long sizeOfCollection(Collection<?> collection, int depth, long defSize) {
+//        if (collection == null) {
+//            return 0;
+//        }
+//        long size = shallowSizeOf(collection);
+//        if (depth > MAX_DEPTH) {
+//            return size;
+//        }
+//        // assume array-backed collection and add per-object references
+//        size += NUM_BYTES_ARRAY_HEADER + collection.size() * NUM_BYTES_OBJECT_REF;
+//        for (Object o : collection) {
+//            size += sizeOfObject(o, depth, defSize);
+//        }
+//        return alignObjectSize(size);
+//    }
+//
+//    private static final class RamUsageQueryVisitor extends QueryVisitor {
+//        long total;
+//        long defSize;
+//        Query root;
+//
+//        RamUsageQueryVisitor(Query root, long defSize) {
+//            this.root = root;
+//            this.defSize = defSize;
+//            if (defSize > 0) {
+//                total = defSize;
+//            } else {
+//                total = shallowSizeOf(root);
+//            }
+//        }
+//
+//        @Override
+//        public void consumeTerms(Query query, Term... terms) {
+//            if (query != root) {
+//                if (defSize > 0) {
+//                    total += defSize;
+//                } else {
+//                    total += shallowSizeOf(query);
+//                }
+//            }
+//            if (terms != null) {
+//                total += sizeOf(terms);
+//            }
+//        }
+//
+//        @Override
+//        public void visitLeaf(Query query) {
+//            if (query == root) {
+//                return;
+//            }
+//            if (query instanceof Accountable) {
+//                total += ((Accountable)query).ramBytesUsed();
+//            } else {
+//                if (defSize > 0) {
+//                    total += defSize;
+//                } else {
+//                    total += shallowSizeOf(query);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public QueryVisitor getSubVisitor(BooleanClause.Occur occur, Query parent) {
+//            return this;
+//        }
+//    }
+//
+//    /**
+//     * Returns the size in bytes of a Query object. Unknown query types will be estimated
+//     * as {@link #QUERY_DEFAULT_RAM_BYTES_USED}.
+//     */
+//    public static long sizeOf(Query q) {
+//        return sizeOf(q, QUERY_DEFAULT_RAM_BYTES_USED);
+//    }
+//
+//    /**
+//     * Returns the size in bytes of a Query object. Unknown query types will be estimated
+//     * using {@link #shallowSizeOf(Object)}, or using the supplied <code>defSize</code> parameter
+//     * if its value is greater than 0.
+//     */
+//    public static long sizeOf(Query q, long defSize) {
+//        if (q instanceof Accountable) {
+//            return ((Accountable)q).ramBytesUsed();
+//        } else {
+//            RamUsageQueryVisitor visitor = new RamUsageQueryVisitor(q, defSize);
+//            q.visit(visitor);
+//            return alignObjectSize(visitor.total);
+//        }
+//    }
+//
+//    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
+//     * will be estimated according to their formulas, and all other object sizes will be estimated
+//     * as {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED}.
+//     */
+//    public static long sizeOfObject(Object o) {
+//        return sizeOfObject(o, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
+//    }
+//
+//    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
+//     * will be estimated according to their formulas, and all other object sizes will be estimated
+//     * using {@link #shallowSizeOf(Object)}, or using the supplied <code>defSize</code> parameter if
+//     * its value is greater than 0.
+//     */
+//    public static long sizeOfObject(Object o, long defSize) {
+//        return sizeOfObject(o, 0, defSize);
+//    }
+//
+//    private static long sizeOfObject(Object o, int depth, long defSize) {
+//        if (o == null) {
+//            return 0;
+//        }
+//        long size;
+//        if (o instanceof Accountable) {
+//            size = ((Accountable)o).ramBytesUsed();
+//        } else if (o instanceof String) {
+//            size = sizeOf((String)o);
+//        } else if (o instanceof boolean[]) {
+//            size = sizeOf((boolean[])o);
+//        } else if (o instanceof byte[]) {
+//            size = sizeOf((byte[])o);
+//        } else if (o instanceof char[]) {
+//            size = sizeOf((char[])o);
+//        } else if (o instanceof double[]) {
+//            size = sizeOf((double[])o);
+//        } else if (o instanceof float[]) {
+//            size = sizeOf((float[])o);
+//        } else if (o instanceof int[]) {
+//            size = sizeOf((int[])o);
+//        } else if (o instanceof Long) {
+//            size = sizeOf((Long)o);
+//        } else if (o instanceof long[]) {
+//            size = sizeOf((long[])o);
+//        } else if (o instanceof short[]) {
+//            size = sizeOf((short[])o);
+//        } else if (o instanceof String[]) {
+//            size = sizeOf((String[]) o);
+//        } else if (o instanceof Query) {
+//            size = sizeOf((Query)o, defSize);
+//        } else if (o instanceof Map) {
+//            size = sizeOfMap((Map) o, ++depth, defSize);
+//        } else if (o instanceof Collection) {
+//            size = sizeOfCollection((Collection)o, ++depth, defSize);
+//        } else {
+//            if (defSize > 0) {
+//                size = defSize;
+//            } else {
+//                size = shallowSizeOf(o);
+//            }
+//        }
+//        return size;
+//    }
+//
+//    /** Returns the size in bytes of the {@link Accountable} object, using its
+//     * {@link Accountable#ramBytesUsed()} method.
+//     */
+//    public static long sizeOf(Accountable accountable) {
+//        return accountable.ramBytesUsed();
+//    }
+//
+//    /** Returns the size in bytes of the String object. */
+//    public static long sizeOf(String s) {
+//        if (s == null) {
+//            return 0;
+//        }
+//        // may not be true in Java 9+ and CompactStrings - but we have no way to determine this
+//
+//        // char[] + hashCode
+//        long size = STRING_SIZE + (long)NUM_BYTES_ARRAY_HEADER + (long)Character.BYTES * s.length();
+//        return alignObjectSize(size);
+//    }
+//
+//    /** Returns the shallow size in bytes of the Object[] object. */
+//    // Use this method instead of #shallowSizeOf(Object) to avoid costly reflection
+//    public static long shallowSizeOf(Object[] arr) {
+//        return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_OBJECT_REF * arr.length);
+//    }
+//
+//    /**
+//     * Estimates a "shallow" memory usage of the given object. For arrays, this will be the
+//     * memory taken by array storage (no subreferences will be followed). For objects, this
+//     * will be the memory taken by the fields.
+//     *
+//     * JVM object alignments are also applied.
+//     */
+//    public static long shallowSizeOf(Object obj) {
+//        if (obj == null) return 0;
+//        final Class<?> clz = obj.getClass();
+//        if (clz.isArray()) {
+//            return shallowSizeOfArray(obj);
+//        } else {
+//            return shallowSizeOfInstance(clz);
+//        }
+//    }
+//
 
     /**
      * Returns the shallow instance size in bytes an instance of the given class would occupy.
      * This works with all conventional classes and primitive types, but not with arrays
      * (the size then depends on the number of elements and varies from object to object).
      *
-     * @see #shallowSizeOf(Object)
      * @throws IllegalArgumentException if {@code clazz} is an array class.
+     * @see #shallowSizeOf(Object)
      */
     public static long shallowSizeOfInstance(Class<?> clazz) {
         if (clazz.isArray())
@@ -532,7 +547,7 @@ public final class RamUsageEstimator {
         long size = NUM_BYTES_OBJECT_HEADER;
 
         // Walk type hierarchy
-        for (;clazz != null; clazz = clazz.getSuperclass()) {
+        for (; clazz != null; clazz = clazz.getSuperclass()) {
             final Class<?> target = clazz;
             final Field[] fields = AccessController.doPrivileged(new PrivilegedAction<Field[]>() {
                 @Override
@@ -548,23 +563,23 @@ public final class RamUsageEstimator {
         }
         return alignObjectSize(size);
     }
-
-    /**
-     * Return shallow size of any <code>array</code>.
-     */
-    private static long shallowSizeOfArray(Object array) {
-        long size = NUM_BYTES_ARRAY_HEADER;
-        final int len = Array.getLength(array);
-        if (len > 0) {
-            Class<?> arrayElementClazz = array.getClass().getComponentType();
-            if (arrayElementClazz.isPrimitive()) {
-                size += (long) len * primitiveSizes.get(arrayElementClazz);
-            } else {
-                size += (long) NUM_BYTES_OBJECT_REF * len;
-            }
-        }
-        return alignObjectSize(size);
-    }
+//
+//    /**
+//     * Return shallow size of any <code>array</code>.
+//     */
+//    private static long shallowSizeOfArray(Object array) {
+//        long size = NUM_BYTES_ARRAY_HEADER;
+//        final int len = Array.getLength(array);
+//        if (len > 0) {
+//            Class<?> arrayElementClazz = array.getClass().getComponentType();
+//            if (arrayElementClazz.isPrimitive()) {
+//                size += (long) len * primitiveSizes.get(arrayElementClazz);
+//            } else {
+//                size += (long) NUM_BYTES_OBJECT_REF * len;
+//            }
+//        }
+//        return alignObjectSize(size);
+//    }
 
     /**
      * This method returns the maximum representation size of an object. <code>sizeSoFar</code>
@@ -579,44 +594,44 @@ public final class RamUsageEstimator {
         // TODO: No alignments based on field type/ subclass fields alignments?
         return sizeSoFar + fsize;
     }
-
-    /**
-     * Returns <code>size</code> in human-readable units (GB, MB, KB or bytes).
-     */
-    public static String humanReadableUnits(long bytes) {
-        return humanReadableUnits(bytes,
-                new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.ROOT)));
-    }
-
-    /**
-     * Returns <code>size</code> in human-readable units (GB, MB, KB or bytes).
-     */
-    public static String humanReadableUnits(long bytes, DecimalFormat df) {
-        if (bytes / ONE_GB > 0) {
-            return df.format((float) bytes / ONE_GB) + " GB";
-        } else if (bytes / ONE_MB > 0) {
-            return df.format((float) bytes / ONE_MB) + " MB";
-        } else if (bytes / ONE_KB > 0) {
-            return df.format((float) bytes / ONE_KB) + " KB";
-        } else {
-            return bytes + " bytes";
-        }
-    }
-
-    /**
-     * Return the size of the provided array of {@link Accountable}s by summing
-     * up the shallow size of the array and the
-     * {@link Accountable#ramBytesUsed() memory usage} reported by each
-     * {@link Accountable}.
-     */
-    public static long sizeOf(Accountable[] accountables) {
-        long size = shallowSizeOf(accountables);
-        for (Accountable accountable : accountables) {
-            if (accountable != null) {
-                size += accountable.ramBytesUsed();
-            }
-        }
-        return size;
-    }
+//
+//    /**
+//     * Returns <code>size</code> in human-readable units (GB, MB, KB or bytes).
+//     */
+//    public static String humanReadableUnits(long bytes) {
+//        return humanReadableUnits(bytes,
+//                new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.ROOT)));
+//    }
+//
+//    /**
+//     * Returns <code>size</code> in human-readable units (GB, MB, KB or bytes).
+//     */
+//    public static String humanReadableUnits(long bytes, DecimalFormat df) {
+//        if (bytes / ONE_GB > 0) {
+//            return df.format((float) bytes / ONE_GB) + " GB";
+//        } else if (bytes / ONE_MB > 0) {
+//            return df.format((float) bytes / ONE_MB) + " MB";
+//        } else if (bytes / ONE_KB > 0) {
+//            return df.format((float) bytes / ONE_KB) + " KB";
+//        } else {
+//            return bytes + " bytes";
+//        }
+//    }
+//
+//    /**
+//     * Return the size of the provided array of {@link Accountable}s by summing
+//     * up the shallow size of the array and the
+//     * {@link Accountable#ramBytesUsed() memory usage} reported by each
+//     * {@link Accountable}.
+//     */
+//    public static long sizeOf(Accountable[] accountables) {
+//        long size = shallowSizeOf(accountables);
+//        for (Accountable accountable : accountables) {
+//            if (accountable != null) {
+//                size += accountable.ramBytesUsed();
+//            }
+//        }
+//        return size;
+//    }
 }
 

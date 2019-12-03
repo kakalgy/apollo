@@ -98,25 +98,41 @@ public abstract class Sorter {
     }
 
     /**
+     * 归并排序
+     * <p>
+     * https://www.jianshu.com/p/33cffa1ce613
+     * </p>
+     * 这里是归并排序的第二步：合并两个有序数组的过程
+     * <p>
+     * 也就是说这里已经默认两个分段[from，mid-1]和[mid，to]已经是排序的，且是从小到大排序
+     *
      * @param from
      * @param mid
      * @param to
      */
     void mergeInPlace(int from, int mid, int to) {
+
+        //
         if (from == mid || mid == to || compare(mid - 1, mid) <= 0) {
             return;
         } else if (to - from == 2) {
             swap(mid - 1, mid);
             return;
         }
+
+
         while (compare(from, mid) <= 0) {
             ++from;
         }
         while (compare(mid - 1, to - 1) <= 0) {
             --to;
         }
+
+
         int first_cut, second_cut;
         int len11, len22;
+
+
         if (mid - from > to - mid) {
             len11 = (mid - from) >>> 1;
             first_cut = from + len11;
@@ -128,8 +144,13 @@ public abstract class Sorter {
             first_cut = upper(from, mid, second_cut);
             len11 = first_cut - from;
         }
+
+
         rotate(first_cut, mid, second_cut);
+
         final int new_mid = first_cut + len22;
+
+
         mergeInPlace(from, first_cut, new_mid);
         mergeInPlace(new_mid, second_cut, to);
     }
@@ -238,8 +259,15 @@ public abstract class Sorter {
      * less than {@value #BINARY_SORT_THRESHOLD}.
      *
      * <p>
-     * 二进制排序实现。 这将执行{@code O（n * log（n））}比较和{@code O（n ^ 2）}交换。
+     * 二叉排序实现。 这将执行{@code O（n * log（n））}比较和{@code O（n ^ 2）}交换。
      * 当要排序的项目数已小于{@value #BINARY_SORT_THRESHOLD}时，更复杂的实现通常将其用作备用。
+     * </p>
+     *
+     * <p>
+     * 在将一个新元素插入已排好序的数组的过程中，寻找插入点时，将待插入区域的首元素设置为a[low]，
+     * 末元素设置为a[high]，则轮比较时将待插入元素与a[m]，其中m=(low+high)/2相比较,如果比参考元素小，
+     * 则选择a[low]到a[m-1]为新的插入区域(即high=m-1)，否则选择a[m+1]到a[high]为新的插入区域（即low=m+1），
+     * 如此直至low<=high不成立，即将此位置之后所有元素后移一位，并将新元素插入a[high+1]
      * </p>
      */
     void binarySort(int from, int to) {
@@ -277,7 +305,7 @@ public abstract class Sorter {
      * {@link IntroSorter}.
      *
      * <p>
-     * 使用堆排序在{@code from}包含和{@code to}不包含之间对项目进行排序。
+     * 使用堆排序在包含{@code from}和不包含{@code to}之间对项目进行排序。
      * 它以{@code O（n * log（n））}运行，并被{@link IntroSorter}用作后备。
      * </p>
      */
@@ -285,9 +313,20 @@ public abstract class Sorter {
         if (to - from <= 1) {
             return;
         }
+
+        //调整堆
         heapify(from, to);
+
+        // 上述逻辑，建堆结束,下面，开始排序逻辑
         for (int end = to - 1; end > from; --end) {
+
+            // 元素交换,作用是去掉大顶堆
+            // 把大顶堆的根元素，放到数组的最后；换句话说，就是每一次的堆调整之后，都会有一个元素到达自己的最终位置
             swap(from, end);
+
+            // 元素交换之后，毫无疑问，最后一个元素无需再考虑排序问题了。
+            // 接下来我们需要排序的，就是已经去掉了部分元素的堆了，这也是为什么此方法放在循环里的原因
+            // 而这里，实质上是自上而下，自左向右进行调整的
             siftDown(from, from, end);
         }
     }
@@ -318,10 +357,24 @@ public abstract class Sorter {
         }
     }
 
+    /**
+     * 返回节点arr[from ---- i]的最后一个非叶节点的index
+     *
+     * @param from
+     * @param i
+     * @return
+     */
     static int heapParent(int from, int i) {
         return ((i - 1 - from) >>> 1) + from;
     }
 
+    /**
+     * 返回节点arr[i]的左子节点index
+     *
+     * @param from
+     * @param i
+     * @return
+     */
     static int heapChild(int from, int i) {
         return ((i - from) << 1) + 1 + from;
     }
