@@ -52,6 +52,7 @@ public abstract class IntroSelector extends Selector {
     private void quickSelect(int from, int to, int k, int maxDepth) {
         assert from <= k;
         assert k < to;
+
         if (to - from == 1) {
             return;
         }

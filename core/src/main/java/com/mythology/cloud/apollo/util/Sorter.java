@@ -112,7 +112,7 @@ public abstract class Sorter {
      */
     void mergeInPlace(int from, int mid, int to) {
 
-        //
+        //排除特殊情况
         if (from == mid || mid == to || compare(mid - 1, mid) <= 0) {
             return;
         } else if (to - from == 2) {

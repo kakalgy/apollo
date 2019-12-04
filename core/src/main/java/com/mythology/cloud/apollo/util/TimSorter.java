@@ -30,6 +30,9 @@ import java.util.Arrays;
  * 通过使<code> maxTempSlots </ code>等于要排序的数据切片长度的一半，可以确保始终使用快速合并例程。
  * 只有快速合并例程才能疾驰（不是就地运行的例程），并且它只能在最长的片上疾驰。
  *
+ * https://blog.csdn.net/sinat_35678407/article/details/82974174
+ * https://www.jianshu.com/p/892ebd063ad9
+ *
  * @lucene.internal
  */
 public abstract class TimSorter extends Sorter {
