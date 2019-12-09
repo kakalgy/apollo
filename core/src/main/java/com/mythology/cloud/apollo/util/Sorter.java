@@ -225,12 +225,27 @@ public abstract class Sorter {
         return upper(f, to, val);
     }
 
+    /**
+     * 翻转数组(注意翻转的下标截止到to-1，最后一位不变)
+     *
+     * @param from
+     * @param to
+     */
     final void reverse(int from, int to) {
         for (--to; from < to; ++from, --to) {
             swap(from, to);
         }
     }
 
+    /**
+     * 围绕mid旋转
+     * <p>
+     * lo - (mid-1) mid - hi ==>  mid - hi lo - (mid-1)
+     *
+     * @param lo
+     * @param mid
+     * @param hi
+     */
     final void rotate(int lo, int mid, int hi) {
         assert lo <= mid && mid <= hi;
         if (lo == mid || mid == hi) {
@@ -259,7 +274,7 @@ public abstract class Sorter {
      * less than {@value #BINARY_SORT_THRESHOLD}.
      *
      * <p>
-     * 二叉排序实现。 这将执行{@code O（n * log（n））}比较和{@code O（n ^ 2）}交换。
+     * 折半插入排序实现。 这将执行{@code O（n * log（n））}比较和{@code O（n ^ 2）}交换。
      * 当要排序的项目数已小于{@value #BINARY_SORT_THRESHOLD}时，更复杂的实现通常将其用作备用。
      * </p>
      *
