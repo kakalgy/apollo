@@ -22,9 +22,17 @@ import java.util.Map;
 /**
  * Estimates the size (memory representation) of Java objects.
  * <p>
+ * 估计Java对象的大小（内存表示）。
+ * </p>
+ * <p>
  * This class uses assumptions that were discovered for the Hotspot
  * virtual machine. If you use a non-OpenJDK/Oracle-based JVM,
  * the measurements may be slightly wrong.
+ *
+ * <p>
+ * 使用此类来估算Hotspot虚拟机。
+ * 如果使用非OpenJDK / Oracle的JVM，则测量结果可能会略有错误。
+ * </p>
  *
  * @lucene.internal
  * @see #shallowSizeOf(Object)
@@ -33,22 +41,22 @@ import java.util.Map;
 public final class RamUsageEstimator {
 
     /**
-     * One kilobyte bytes.
+     * One kilobyte bytes. 1KB
      */
     public static final long ONE_KB = 1024;
 
     /**
-     * One megabyte bytes.
+     * One megabyte bytes. 1MB
      */
     public static final long ONE_MB = ONE_KB * ONE_KB;
 
     /**
-     * One gigabyte bytes.
+     * One gigabyte bytes. 1GB
      */
     public static final long ONE_GB = ONE_KB * ONE_MB;
 
     /**
-     * No instantiation.
+     * No instantiation. 私有构造函数，防止实例化
      */
     private RamUsageEstimator() {
     }
@@ -233,47 +241,65 @@ public final class RamUsageEstimator {
         return LONG_SIZE;
     }
 
-    /** Returns the size in bytes of the byte[] object. */
+    /**
+     * Returns the size in bytes of the byte[] object.
+     */
     public static long sizeOf(byte[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
     }
 
-    /** Returns the size in bytes of the boolean[] object. */
+    /**
+     * Returns the size in bytes of the boolean[] object.
+     */
     public static long sizeOf(boolean[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);
     }
 
-    /** Returns the size in bytes of the char[] object. */
+    /**
+     * Returns the size in bytes of the char[] object.
+     */
     public static long sizeOf(char[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Character.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the short[] object. */
+    /**
+     * Returns the size in bytes of the short[] object.
+     */
     public static long sizeOf(short[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Short.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the int[] object. */
+    /**
+     * Returns the size in bytes of the int[] object.
+     */
     public static long sizeOf(int[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Integer.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the float[] object. */
+    /**
+     * Returns the size in bytes of the float[] object.
+     */
     public static long sizeOf(float[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Float.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the long[] object. */
+    /**
+     * Returns the size in bytes of the long[] object.
+     */
     public static long sizeOf(long[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Long.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the double[] object. */
+    /**
+     * Returns the size in bytes of the double[] object.
+     */
     public static long sizeOf(double[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) Double.BYTES * arr.length);
     }
 
-    /** Returns the size in bytes of the String[] object. */
+    /**
+     * Returns the size in bytes of the String[] object.
+     */
     public static long sizeOf(String[] arr) {
         long size = shallowSizeOf(arr);
         for (String s : arr) {
@@ -285,10 +311,13 @@ public final class RamUsageEstimator {
         return size;
     }
 
-    /** Recurse only into immediate descendants. */
+    /**
+     * Recurse only into immediate descendants.
+     */
     public static final int MAX_DEPTH = 1;
 
-    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
+    /**
+     * Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
      * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
      * This method recurses up to {@link #MAX_DEPTH}.
      */
@@ -296,7 +325,8 @@ public final class RamUsageEstimator {
         return sizeOfMap(map, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
     }
 
-    /** Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
+    /**
+     * Returns the size in bytes of a Map object, including sizes of its keys and values, supplying
      * default object size when object type is not well known.
      * This method recurses up to {@link #MAX_DEPTH}.
      */
@@ -324,7 +354,8 @@ public final class RamUsageEstimator {
         return alignObjectSize(size);
     }
 
-    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
+    /**
+     * Returns the size in bytes of a Collection object, including sizes of its values, supplying
      * {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED} when object type is not well known.
      * This method recurses up to {@link #MAX_DEPTH}.
      */
@@ -332,7 +363,8 @@ public final class RamUsageEstimator {
         return sizeOfCollection(collection, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
     }
 
-    /** Returns the size in bytes of a Collection object, including sizes of its values, supplying
+    /**
+     * Returns the size in bytes of a Collection object, including sizes of its values, supplying
      * default object size when object type is not well known.
      * This method recurses up to {@link #MAX_DEPTH}.
      */
@@ -391,7 +423,7 @@ public final class RamUsageEstimator {
                 return;
             }
             if (query instanceof Accountable) {
-                total += ((Accountable)query).ramBytesUsed();
+                total += ((Accountable) query).ramBytesUsed();
             } else {
                 if (defSize > 0) {
                     total += defSize;
@@ -422,7 +454,7 @@ public final class RamUsageEstimator {
      */
     public static long sizeOf(Query q, long defSize) {
         if (q instanceof Accountable) {
-            return ((Accountable)q).ramBytesUsed();
+            return ((Accountable) q).ramBytesUsed();
         } else {
             RamUsageQueryVisitor visitor = new RamUsageQueryVisitor(q, defSize);
             q.visit(visitor);
@@ -430,7 +462,8 @@ public final class RamUsageEstimator {
         }
     }
 
-    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
+    /**
+     * Best effort attempt to estimate the size in bytes of an undetermined object. Known types
      * will be estimated according to their formulas, and all other object sizes will be estimated
      * as {@link #UNKNOWN_DEFAULT_RAM_BYTES_USED}.
      */
@@ -438,7 +471,8 @@ public final class RamUsageEstimator {
         return sizeOfObject(o, 0, UNKNOWN_DEFAULT_RAM_BYTES_USED);
     }
 
-    /** Best effort attempt to estimate the size in bytes of an undetermined object. Known types
+    /**
+     * Best effort attempt to estimate the size in bytes of an undetermined object. Known types
      * will be estimated according to their formulas, and all other object sizes will be estimated
      * using {@link #shallowSizeOf(Object)}, or using the supplied <code>defSize</code> parameter if
      * its value is greater than 0.
@@ -453,35 +487,35 @@ public final class RamUsageEstimator {
         }
         long size;
         if (o instanceof Accountable) {
-            size = ((Accountable)o).ramBytesUsed();
+            size = ((Accountable) o).ramBytesUsed();
         } else if (o instanceof String) {
-            size = sizeOf((String)o);
+            size = sizeOf((String) o);
         } else if (o instanceof boolean[]) {
-            size = sizeOf((boolean[])o);
+            size = sizeOf((boolean[]) o);
         } else if (o instanceof byte[]) {
-            size = sizeOf((byte[])o);
+            size = sizeOf((byte[]) o);
         } else if (o instanceof char[]) {
-            size = sizeOf((char[])o);
+            size = sizeOf((char[]) o);
         } else if (o instanceof double[]) {
-            size = sizeOf((double[])o);
+            size = sizeOf((double[]) o);
         } else if (o instanceof float[]) {
-            size = sizeOf((float[])o);
+            size = sizeOf((float[]) o);
         } else if (o instanceof int[]) {
-            size = sizeOf((int[])o);
+            size = sizeOf((int[]) o);
         } else if (o instanceof Long) {
-            size = sizeOf((Long)o);
+            size = sizeOf((Long) o);
         } else if (o instanceof long[]) {
-            size = sizeOf((long[])o);
+            size = sizeOf((long[]) o);
         } else if (o instanceof short[]) {
-            size = sizeOf((short[])o);
+            size = sizeOf((short[]) o);
         } else if (o instanceof String[]) {
             size = sizeOf((String[]) o);
         } else if (o instanceof Query) {
-            size = sizeOf((Query)o, defSize);
+            size = sizeOf((Query) o, defSize);
         } else if (o instanceof Map) {
             size = sizeOfMap((Map) o, ++depth, defSize);
         } else if (o instanceof Collection) {
-            size = sizeOfCollection((Collection)o, ++depth, defSize);
+            size = sizeOfCollection((Collection) o, ++depth, defSize);
         } else {
             if (defSize > 0) {
                 size = defSize;
@@ -492,14 +526,17 @@ public final class RamUsageEstimator {
         return size;
     }
 
-    /** Returns the size in bytes of the {@link Accountable} object, using its
+    /**
+     * Returns the size in bytes of the {@link Accountable} object, using its
      * {@link Accountable#ramBytesUsed()} method.
      */
     public static long sizeOf(Accountable accountable) {
         return accountable.ramBytesUsed();
     }
 
-    /** Returns the size in bytes of the String object. */
+    /**
+     * Returns the size in bytes of the String object.
+     */
     public static long sizeOf(String s) {
         if (s == null) {
             return 0;
@@ -507,11 +544,13 @@ public final class RamUsageEstimator {
         // may not be true in Java 9+ and CompactStrings - but we have no way to determine this
 
         // char[] + hashCode
-        long size = STRING_SIZE + (long)NUM_BYTES_ARRAY_HEADER + (long)Character.BYTES * s.length();
+        long size = STRING_SIZE + (long) NUM_BYTES_ARRAY_HEADER + (long) Character.BYTES * s.length();
         return alignObjectSize(size);
     }
 
-    /** Returns the shallow size in bytes of the Object[] object. */
+    /**
+     * Returns the shallow size in bytes of the Object[] object.
+     */
     // Use this method instead of #shallowSizeOf(Object) to avoid costly reflection
     public static long shallowSizeOf(Object[] arr) {
         return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_OBJECT_REF * arr.length);
@@ -521,7 +560,7 @@ public final class RamUsageEstimator {
      * Estimates a "shallow" memory usage of the given object. For arrays, this will be the
      * memory taken by array storage (no subreferences will be followed). For objects, this
      * will be the memory taken by the fields.
-     *
+     * <p>
      * JVM object alignments are also applied.
      */
     public static long shallowSizeOf(Object obj) {
