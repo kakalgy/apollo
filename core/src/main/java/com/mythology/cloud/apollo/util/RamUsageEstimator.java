@@ -63,21 +63,39 @@ public final class RamUsageEstimator {
 
     /**
      * True, iff compressed references (oops) are enabled by this JVM
+     * <p>
+     * oop（ordinary object pointer），即普通对象指针，是JVM中用于代表引用对象的句柄。
+     * JVM是否开启压缩指针
+     * </p>
+     *
+     * <p>
+     * https://blog.csdn.net/weixin_34279061/article/details/88014879
+     * https://www.2cto.com/kf/201611/560958.html
+     * </p>
      */
     public final static boolean COMPRESSED_REFS_ENABLED;
 
     /**
      * Number of bytes this JVM uses to represent an object reference.
+     * <p>
+     * JVM用来表示对象引用的字节数。
+     * </p>
      */
     public final static int NUM_BYTES_OBJECT_REF;
 
     /**
      * Number of bytes to represent an object header (no fields, no alignments).
+     * <p>
+     * 表示对象标头的字节数（无字段，无对齐）
+     * </p>
      */
     public final static int NUM_BYTES_OBJECT_HEADER;
 
     /**
      * Number of bytes to represent an array header (no content, but with alignments).
+     * <p>
+     * 表示数组头的字节数（无内容，但具有对齐方式）。
+     * </p>
      */
     public final static int NUM_BYTES_ARRAY_HEADER;
 
@@ -90,20 +108,31 @@ public final class RamUsageEstimator {
     /**
      * Approximate memory usage that we assign to all unknown queries -
      * this maps roughly to a BooleanQuery with a couple term clauses.
+     *
+     * <p>
+     * 一个常量，指定JVM内部的对象对齐边界。 对象将始终使用此常数的整数倍，可能会浪费一些空间。
+     * </p>
      */
     public static final int QUERY_DEFAULT_RAM_BYTES_USED = 1024;
 
     /**
      * Approximate memory usage that we assign to all unknown objects -
      * this maps roughly to a few primitive fields and a couple short String-s.
+     * <p>
+     * 我们分配给所有未知对象的近似内存使用情况-这大致映射到几个基本字段和几个简短的String-s。
+     * </p>
      */
     public static final int UNKNOWN_DEFAULT_RAM_BYTES_USED = 256;
 
     /**
-     * Sizes of primitive classes.
+     * Sizes of primitive classes. 基础类型的size， key为类型，value为占用byte大小，比如Integer占用4位
      */
     public static final Map<Class<?>, Integer> primitiveSizes;
 
+
+    /**
+     * 初始化基础类型的size的map
+     */
     static {
         Map<Class<?>, Integer> primitiveSizesMap = new IdentityHashMap<>();
         primitiveSizesMap.put(boolean.class, 1);
@@ -120,12 +149,13 @@ public final class RamUsageEstimator {
 
     /**
      * JVMs typically cache small longs. This tries to find out what the range is.
+     * <p>JVM通常会缓存较小的long。 这试图找出范围是多少。</p>
      */
     static final long LONG_CACHE_MIN_VALUE, LONG_CACHE_MAX_VALUE;
     static final int LONG_SIZE, STRING_SIZE;
 
     /**
-     * For testing only
+     * For testing only <p>测试专用</p>
      */
     static final boolean JVM_IS_HOTSPOT_64BIT;
 
@@ -134,18 +164,20 @@ public final class RamUsageEstimator {
 
     /**
      * Initialize constants and try to collect information about the JVM internals.
+     * <p>
+     *     初始化常量，并尝试收集有关JVM内部的信息。
+     * </p>
      */
     static {
         if (Constants.JRE_IS_64BIT) {
-            // Try to get compressed oops and object alignment (the default seems to be 8 on Hotspot);
-            // (this only works on 64 bit, on 32 bits the alignment and reference size is fixed):
+            // Try to get compressed oops and object alignment (the default seems to be 8 on Hotspot); 尝试获取压缩的对象和对象对齐（在Hotspot上默认为8）；
+            // (this only works on 64 bit, on 32 bits the alignment and reference size is fixed):这仅适用于64位，对于32位，对齐和参考大小是固定的
             boolean compressedOops = false;
             int objectAlignment = 8;
             boolean isHotspot = false;
             try {
                 final Class<?> beanClazz = Class.forName(HOTSPOT_BEAN_CLASS);
-                // we use reflection for this, because the management factory is not part
-                // of Java 8's compact profile:
+                // we use reflection for this, because the management factory is not part of Java 8's compact profile:
                 final Object hotSpotBean = Class.forName(MANAGEMENT_FACTORY_CLASS)
                         .getMethod("getPlatformMXBean", Class.class)
                         .invoke(null, beanClazz);
@@ -210,17 +242,23 @@ public final class RamUsageEstimator {
 
     /**
      * Approximate memory usage that we assign to a Hashtable / HashMap entry.
+     * <p>
+     * 我们分配给Hashtable / HashMap 的entry的大概的内存使用。
+     * </p>
      */
     public static final long HASHTABLE_RAM_BYTES_PER_ENTRY =
             2 * NUM_BYTES_OBJECT_REF // key + value
-                    * 2; // hash tables need to be oversized to avoid collisions, assume 2x capacity
+                    * 2; // hash tables need to be oversized to avoid collisions, assume 2x capacity 哈希表需要超大尺寸以避免冲突，假设容量是2倍
 
     /**
      * Approximate memory usage that we assign to a LinkedHashMap entry.
+     * <p>
+     * 我们分配给LinkedHashMap 的entry的大概的内存使用
+     * </p>
      */
     public static final long LINKED_HASHTABLE_RAM_BYTES_PER_ENTRY =
             HASHTABLE_RAM_BYTES_PER_ENTRY
-                    + 2 * NUM_BYTES_OBJECT_REF; // previous & next references
+                    + 2 * NUM_BYTES_OBJECT_REF; // previous & next references 添加头尾两个指针的空间
 
     /**
      * Aligns an object size to be the next multiple of {@link #NUM_BYTES_OBJECT_ALIGNMENT}.
