@@ -72,6 +72,11 @@ package com.mythology.cloud.apollo.util;
  * without always allocating a new byte[] as
  * String.getBytes(StandardCharsets.UTF_8) does.
  *
+ * <p>
+ * 用于将Java的UTF16 char[]编码为UTF8 byte []的类，
+ * 而不必总是像String.getBytes（StandardCharsets.UTF_8）那样分配新的byte[]。
+ * </p>
+ *
  * @author gyli
  * @date 2019/12/10 11:07
  * @lucene.internal
@@ -630,6 +635,9 @@ public final class UnicodeUtil {
 
     /**
      * Returns the maximum number of utf8 bytes required to encode a utf16 (e.g., java char[], String)
+     * <p>
+     * 返回对utf16进行编码所需的utf8字节的最大数量（例如，java char []，String）
+     * </p>
      */
     public static int maxUTF8Length(int utf16Length) {
         return Math.multiplyExact(utf16Length, MAX_UTF8_BYTES_PER_CHAR);

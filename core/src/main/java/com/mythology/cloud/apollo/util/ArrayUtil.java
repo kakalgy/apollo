@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Comparator;
 
 /**
- * Methods for manipulating arrays.
+ * Methods for manipulating arrays.操纵数组的方法。
  *
  * @lucene.internal
  */
@@ -13,9 +13,13 @@ public final class ArrayUtil {
 
     /**
      * Maximum length for an array (Integer.MAX_VALUE - RamUsageEstimator.NUM_BYTES_ARRAY_HEADER).
+     * 数组的最大长度
      */
     public static final int MAX_ARRAY_LENGTH = Integer.MAX_VALUE - RamUsageEstimator.NUM_BYTES_ARRAY_HEADER;
 
+    /**
+     * 私有构造函数
+     */
     private ArrayUtil() {
     } // no instance
 
@@ -28,6 +32,9 @@ public final class ArrayUtil {
 
     /**
      * Parses a char array into an int.
+     * <p>
+     * 将一个char数组转换为一个int值
+     * </p>
      *
      * @param chars  the character array
      * @param offset The offset into the array
@@ -44,6 +51,11 @@ public final class ArrayUtil {
      * result. Throws NumberFormatException if the string does not represent an
      * int quantity. The second argument specifies the radix to use when parsing
      * the value.
+     * <p>
+     * 解析字符串参数，就好像它是一个int值一样，并返回结果。
+     * 如果字符串不表示int数量，则引发NumberFormatException。
+     * 第二个参数指定解析值时要使用的基数。 基数即进制数。2代表二进制
+     * </p>
      *
      * @param chars a string representation of an int quantity.
      * @param radix the base to use for conversion.
@@ -52,6 +64,13 @@ public final class ArrayUtil {
      */
     public static int parseInt(char[] chars, int offset, int len, int radix)
             throws NumberFormatException {
+        /**
+         * 字符串转数字的合法字符串分为2部分，1）-或+符号位； 2）0到9，a到z;
+         * 符号位不参与转换
+         * 基数必须大于1，因为如果基数等于1，那么就会无意义，陷入无限循环。
+         * Character. MIN_RADIX = 2， Character.MAX_RADIX = 36
+         * 所以，0到9一共10位，a到z一共26位，所以一共36位。
+         */
         if (chars == null || radix < Character.MIN_RADIX
                 || radix > Character.MAX_RADIX) {
             throw new NumberFormatException();
@@ -61,6 +80,7 @@ public final class ArrayUtil {
             throw new NumberFormatException("chars length is 0");
         }
         boolean negative = chars[offset + i] == '-';
+        // -号后面必须要有值，否则只有一个-号，不是数字
         if (negative && ++i == len) {
             throw new NumberFormatException("can't convert to an int");
         }
@@ -71,7 +91,17 @@ public final class ArrayUtil {
         return parse(chars, offset, len, radix, negative);
     }
 
-
+    /**
+     * 将char数组转换为int值
+     *
+     * @param chars
+     * @param offset
+     * @param len
+     * @param radix
+     * @param negative
+     * @return
+     * @throws NumberFormatException
+     */
     private static int parse(char[] chars, int offset, int len, int radix,
                              boolean negative) throws NumberFormatException {
         int max = Integer.MIN_VALUE / radix;
@@ -113,12 +143,19 @@ public final class ArrayUtil {
      * over-allocating exponentially to achieve amortized
      * linear-time cost as the array grows.
      * <p>
+     * 返回数组大小 <= minTargetSize，通常以指数方式过度分配以实现随着数组增长而摊销的线性时间成本。
+     * </p>
+     * <p>
      * NOTE: this was originally borrowed from Python 2.4.2
      * listobject.c sources (attribution in LICENSE.txt), but
      * has now been substantially changed based on
      * discussions from java-dev thread with subject "Dynamic
      * array reallocation algorithms", started on Jan 12
      * 2010.
+     * <p>
+     * 注意：这最初是从Python 2.4.2 listobject.c来源（LICENSE.txt中的属性）借来的，
+     * 但是根据1月12日开始的主题为“动态数组重新分配算法”的java-dev线程的讨论，现在已进行了实质性更改。
+     * </p>
      *
      * @param minTargetSize   Minimum required value to be returned.
      * @param bytesPerElement Bytes used by each element of
@@ -166,7 +203,7 @@ public final class ArrayUtil {
             // round up to 8 byte alignment in 64bit env
             switch (bytesPerElement) {
                 case 4:
-                    // round up to multiple of 2
+                    // round up to multiple of 2 取整为2的倍数
                     return (newSize + 1) & 0x7ffffffe;
                 case 2:
                     // round up to multiple of 4
@@ -363,6 +400,9 @@ public final class ArrayUtil {
 
     /**
      * Returns a new array whose size is exact the specified {@code newLength} without over-allocating
+     * <p>
+     * 返回一个新数组，其大小与指定的{@code newLength}完全相同，而不会过度分配
+     * </p>
      */
     public static byte[] growExact(byte[] array, int newLength) {
         byte[] copy = new byte[newLength];
@@ -372,6 +412,9 @@ public final class ArrayUtil {
 
     /**
      * Returns an array whose size is at least {@code minSize}, generally over-allocating exponentially
+     * <p>
+     * 返回大小至少为{@code minSize}的数组，通常以指数方式过度分配
+     * </p>
      */
     public static byte[] grow(byte[] array, int minSize) {
         assert minSize >= 0 : "size must be positive (got " + minSize + "): likely integer overflow?";

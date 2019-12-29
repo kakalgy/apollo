@@ -5,6 +5,11 @@ package com.mythology.cloud.apollo.util;
  * existing int[].  The {@link #ints} member should never be null; use
  * {@link #EMPTY_INTS} if necessary.
  *
+ * <p>
+ * 将int []表示为现有int []中的一个切片（偏移量+长度）。
+ * {@link #ints}成员不应为null； 如有必要，请使用{@link #EMPTY_INTS}。
+ * </p>
+ *
  * @author gyli
  * @lucene.internal
  * @date 2019/12/10 11:10
@@ -38,6 +43,10 @@ public final class IntsRef implements Comparable<IntsRef>, Cloneable {
     /**
      * Create a IntsRef pointing to a new array of size <code>capacity</code>.
      * Offset and length will both be zero.
+     * <p>
+     * 创建一个IntsRef指向一个新的数组，其大小为<code>capacity</code>。
+     * 偏移量和长度均为零。
+     * </p>
      */
     public IntsRef(int capacity) {
         ints = new int[capacity];
@@ -58,6 +67,9 @@ public final class IntsRef implements Comparable<IntsRef>, Cloneable {
      * Returns a shallow clone of this instance (the underlying ints are
      * <b>not</b> copied and will be shared by both the returned object and this
      * object.
+     * <p>
+     * 返回此实例的浅拷贝副本（底层ints不会被复制，并且将由返回的对象和此对象共享)。
+     * </p>
      *
      * @see #deepCopyOf
      */
@@ -88,6 +100,12 @@ public final class IntsRef implements Comparable<IntsRef>, Cloneable {
         return false;
     }
 
+    /**
+     * IntsRef 的比较，ints相同则返回true
+     *
+     * @param other
+     * @return
+     */
     public boolean intsEquals(IntsRef other) {
         return FutureArrays.equals(this.ints, this.offset, this.offset + this.length,
                 other.ints, other.offset, other.offset + other.length);
@@ -95,6 +113,7 @@ public final class IntsRef implements Comparable<IntsRef>, Cloneable {
 
     /**
      * Signed int order comparison
+     * 无符号字节顺序比较
      */
     @Override
     public int compareTo(IntsRef other) {
@@ -120,6 +139,9 @@ public final class IntsRef implements Comparable<IntsRef>, Cloneable {
     /**
      * Creates a new IntsRef that points to a copy of the ints from
      * <code>other</code>
+     * <p>
+     * 深拷贝，新建一个IntsRef对象，指向other的一个复制的ints
+     * </p>
      * <p>
      * The returned IntsRef will have a length of other.length
      * and an offset of zero.

@@ -149,7 +149,7 @@ public final class RamUsageEstimator {
 
     /**
      * JVMs typically cache small longs. This tries to find out what the range is.
-     * <p>JVM通常会缓存较小的long。 这试图找出范围是多少。</p>
+     * <p>JVM通常会缓存较小的long。 这试图找出范围是多少。一般来说是-128-127</p>
      */
     static final long LONG_CACHE_MIN_VALUE, LONG_CACHE_MAX_VALUE;
     static final int LONG_SIZE, STRING_SIZE;
@@ -169,6 +169,8 @@ public final class RamUsageEstimator {
      * </p>
      */
     static {
+
+        //确定
         if (Constants.JRE_IS_64BIT) {
             // Try to get compressed oops and object alignment (the default seems to be 8 on Hotspot); 尝试获取压缩的对象和对象对齐（在Hotspot上默认为8）；
             // (this only works on 64 bit, on 32 bits the alignment and reference size is fixed):这仅适用于64位，对于32位，对齐和参考大小是固定的
@@ -223,7 +225,8 @@ public final class RamUsageEstimator {
             NUM_BYTES_ARRAY_HEADER = NUM_BYTES_OBJECT_HEADER + Integer.BYTES;
         }
 
-        // get min/max value of cached Long class instances:
+
+        // get min/max value of cached Long class instances: 注意：原来是因为Long中有一个静态的内部类LongCache，专门用于缓存-128至127之间的值，一共256个元素。
         long longCacheMinValue = 0;
         while (longCacheMinValue > Long.MIN_VALUE
                 && Long.valueOf(longCacheMinValue - 1) == Long.valueOf(longCacheMinValue - 1)) {
@@ -234,8 +237,11 @@ public final class RamUsageEstimator {
                 && Long.valueOf(longCacheMaxValue + 1) == Long.valueOf(longCacheMaxValue + 1)) {
             longCacheMaxValue += 1;
         }
+        //理论上为-128
         LONG_CACHE_MIN_VALUE = longCacheMinValue;
+        //理论上为127
         LONG_CACHE_MAX_VALUE = longCacheMaxValue;
+
         LONG_SIZE = (int) shallowSizeOfInstance(Long.class);
         STRING_SIZE = (int) shallowSizeOfInstance(String.class);
     }
@@ -262,6 +268,9 @@ public final class RamUsageEstimator {
 
     /**
      * Aligns an object size to be the next multiple of {@link #NUM_BYTES_OBJECT_ALIGNMENT}.
+     * <p>
+     * 将对象大小对齐为下一个{@link #NUM_BYTES_OBJECT_ALIGNMENT}的倍数
+     * </p>
      */
     public static long alignObjectSize(long size) {
         size += (long) NUM_BYTES_OBJECT_ALIGNMENT - 1L;
@@ -598,6 +607,11 @@ public final class RamUsageEstimator {
      * Estimates a "shallow" memory usage of the given object. For arrays, this will be the
      * memory taken by array storage (no subreferences will be followed). For objects, this
      * will be the memory taken by the fields.
+     *
+     * <p>
+     * 估计给定对象的“浅”内存使用率。
+     * 对于数组，这将是数组存储占用的内存（将不跟随任何子引用）。 对于对象，这将是字段占用的内存。
+     * </p>
      * <p>
      * JVM object alignments are also applied.
      */
@@ -617,18 +631,25 @@ public final class RamUsageEstimator {
      * This works with all conventional classes and primitive types, but not with arrays
      * (the size then depends on the number of elements and varies from object to object).
      *
+     * <p>
+     * 返回给定类实例将占用的浅层实例大小（以字节为单位）。
+     * 这适用于所有常规类和基本类型，但不适用于数组（大小取决于元素的数量，并且因对象而异）。
+     * </p>
+     *
      * @throws IllegalArgumentException if {@code clazz} is an array class.
      * @see #shallowSizeOf(Object)
      */
     public static long shallowSizeOfInstance(Class<?> clazz) {
-        if (clazz.isArray())
+        if (clazz.isArray()) {
             throw new IllegalArgumentException("This method does not work with array classes.");
-        if (clazz.isPrimitive())
+        }
+        if (clazz.isPrimitive()) {
             return primitiveSizes.get(clazz);
+        }
 
         long size = NUM_BYTES_OBJECT_HEADER;
 
-        // Walk type hierarchy
+        // Walk type hierarchy 层次遍历
         for (; clazz != null; clazz = clazz.getSuperclass()) {
             final Class<?> target = clazz;
             final Field[] fields = AccessController.doPrivileged(new PrivilegedAction<Field[]>() {
@@ -667,8 +688,16 @@ public final class RamUsageEstimator {
      * This method returns the maximum representation size of an object. <code>sizeSoFar</code>
      * is the object's size measured so far. <code>f</code> is the field being probed.
      *
+     * <p>
+     * 此方法返回对象的最大表示大小。
+     * <code> sizeSoFar </code>是到目前为止测量的对象大小。 <code> f </code>是要探测的字段。
+     * </p>
+     *
      * <p>The returned offset will be the maximum of whatever was measured so far and
      * <code>f</code> field's offset and representation size (unaligned).
+     * <p>
+     * 返回的偏移量将是到目前为止测得的最大值以及<code> f </ code>字段的偏移量和表示尺寸（未对齐）的最大值。
+     * </p>
      */
     static long adjustForField(long sizeSoFar, final Field f) {
         final Class<?> type = f.getType();

@@ -13,6 +13,9 @@ public class BytesRefBuilder {
 
     /**
      * Sole constructor.
+     * <p>
+     * 唯一的构造函数
+     * </p>
      */
     public BytesRefBuilder() {
         ref = new BytesRef();
@@ -40,14 +43,14 @@ public class BytesRefBuilder {
     }
 
     /**
-     * Return the byte at the given offset.
+     * Return the byte at the given offset. 返回offset位置的byte
      */
     public byte byteAt(int offset) {
         return ref.bytes[offset];
     }
 
     /**
-     * Set a byte.
+     * Set a byte. 在offset位置设置值为b
      */
     public void setByteAt(int offset, byte b) {
         ref.bytes[offset] = b;
@@ -56,6 +59,9 @@ public class BytesRefBuilder {
     /**
      * Ensure that this builder can hold at least <code>capacity</code> bytes
      * without resizing.
+     * <p>
+     * 确保此builder至少可以容纳<code>capacity</code>个字节而无需调整大小。
+     * </p>
      */
     public void grow(int capacity) {
         ref.bytes = ArrayUtil.grow(ref.bytes, capacity);
@@ -68,6 +74,7 @@ public class BytesRefBuilder {
         grow(ref.length + 1);
         ref.bytes[ref.length++] = b;
     }
+
 
     /**
      * Append the provided bytes to this builder.
@@ -91,6 +98,7 @@ public class BytesRefBuilder {
     public void append(BytesRefBuilder builder) {
         append(builder.get());
     }
+
 
     /**
      * Reset this builder to the empty state.
@@ -126,9 +134,13 @@ public class BytesRefBuilder {
         append(builder);
     }
 
+
     /**
      * Replace the content of this buffer with UTF-8 encoded bytes that would
      * represent the provided text.
+     * <p>
+     * 用代表所提供文本的UTF-8编码字节替换此缓冲区的内容。
+     * </p>
      */
     public void copyChars(CharSequence text) {
         copyChars(text, 0, text.length());
@@ -152,10 +164,15 @@ public class BytesRefBuilder {
         ref.length = UnicodeUtil.UTF16toUTF8(text, off, len, ref.bytes);
     }
 
+
     /**
      * Return a {@link BytesRef} that points to the internal content of this
      * builder. Any update to the content of this builder might invalidate
      * the provided <code>ref</code> and vice-versa.
+     * <p>
+     * 返回指向该builder内部内容的{@link BytesRef}。
+     * 对此builder内容的任何更新都可能使提供的<code>ref</code>无效，反之亦然。
+     * </p>
      */
     public BytesRef get() {
         assert ref.offset == 0 : "Modifying the offset of the returned ref is illegal";

@@ -5,6 +5,10 @@ import java.util.Objects;
 /**
  * A clause in a BooleanQuery
  *
+ * <p>
+ * BooleanQuery中的子句
+ * </p>
+ *
  * @author gyli
  * @date 2019/12/10 14:48
  */
